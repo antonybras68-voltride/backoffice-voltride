@@ -326,40 +326,6 @@ function App() {
             </div>
           </div>
         )}
-                </div>
-              </div>
-              <button onClick={saveOperatorSettings} className="bg-cyan-600 text-white px-6 py-2 rounded-lg hover:bg-cyan-700 transition">Sauvegarder</button>
-            </div>
-          </div>
-        )}
-        {tab === "comptabilite" && (
-          <div className="max-w-2xl">
-            <h2 className="text-xl font-bold mb-4">💰 Paramètres Comptabilité</h2>
-            <div className="bg-white rounded-xl shadow p-6 space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div><label className="block text-sm font-medium mb-1">Taux TVA (%)</label><input type="number" value={comptaSettings.tvaRate} onChange={e => setComptaSettings({...comptaSettings, tvaRate: parseFloat(e.target.value) || 21})} className="w-full border rounded-lg px-3 py-2" /></div>
-                <div><label className="block text-sm font-medium mb-1">Devise</label><select value={comptaSettings.currency} onChange={e => setComptaSettings({...comptaSettings, currency: e.target.value})} className="w-full border rounded-lg px-3 py-2"><option value="EUR">EUR (€)</option><option value="USD">USD ($)</option><option value="GBP">GBP (£)</option></select></div>
-              </div>
-              <div className="border-t pt-4 mt-4">
-                <h3 className="font-bold mb-3">🧾 Factures</h3>
-                <div className="grid grid-cols-2 gap-4">
-                  <div><label className="block text-sm font-medium mb-1">Préfixe factures</label><input type="text" value={comptaSettings.invoicePrefix} onChange={e => setComptaSettings({...comptaSettings, invoicePrefix: e.target.value})} className="w-full border rounded-lg px-3 py-2" placeholder="VR-" /></div>
-                  <div><label className="block text-sm font-medium mb-1">Prochain numéro</label><input type="number" value={comptaSettings.invoiceNextNumber} onChange={e => setComptaSettings({...comptaSettings, invoiceNextNumber: parseInt(e.target.value) || 1})} className="w-full border rounded-lg px-3 py-2" /></div>
-                </div>
-                <div className="mt-3"><label className="block text-sm font-medium mb-1">Délai de paiement (jours)</label><input type="number" value={comptaSettings.paymentTerms} onChange={e => setComptaSettings({...comptaSettings, paymentTerms: parseInt(e.target.value) || 30})} className="w-full border rounded-lg px-3 py-2" /></div>
-              </div>
-              <div className="border-t pt-4 mt-4">
-                <h3 className="font-bold mb-3">🏦 Coordonnées bancaires</h3>
-                <div className="space-y-3">
-                  <div><label className="block text-sm font-medium mb-1">Nom de la banque</label><input type="text" value={comptaSettings.bankName} onChange={e => setComptaSettings({...comptaSettings, bankName: e.target.value})} className="w-full border rounded-lg px-3 py-2" placeholder="Banco Santander" /></div>
-                  <div><label className="block text-sm font-medium mb-1">IBAN</label><input type="text" value={comptaSettings.bankIban} onChange={e => setComptaSettings({...comptaSettings, bankIban: e.target.value})} className="w-full border rounded-lg px-3 py-2 font-mono" placeholder="ES00 0000 0000 0000 0000 0000" /></div>
-                  <div><label className="block text-sm font-medium mb-1">BIC/SWIFT</label><input type="text" value={comptaSettings.bankBic} onChange={e => setComptaSettings({...comptaSettings, bankBic: e.target.value})} className="w-full border rounded-lg px-3 py-2 font-mono" placeholder="BSCHESMMXXX" /></div>
-                </div>
-              </div>
-              <button onClick={saveComptaSettings} className="bg-cyan-600 text-white px-6 py-2 rounded-lg hover:bg-cyan-700 transition">Sauvegarder</button>
-            </div>
-          </div>
-        )}
       </div>
 
       {showModal === 'vehicle' && <VehicleModal vehicle={editItem} categories={categories} onSave={(data) => handleSave('vehicles', data)} onClose={() => { setShowModal(null); setEditItem(null) }} />}
