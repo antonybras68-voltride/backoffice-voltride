@@ -104,7 +104,7 @@ function PeriodsTab({ periods, agencyId, onReload, showForm, setShowForm, editin
   return (
     <div>
       <div className="flex justify-between items-center mb-4">
-        <p className="text-sm text-gray-600">Définissez les horaires pour chaque saison</p>
+        <p className="text-sm text-gray-600">Définissez les horaires pour chaque saison (continus ou discontinus)</p>
         <button onClick={() => setShowForm(true)} className="bg-cyan-600 text-white px-4 py-2 rounded-lg text-sm">+ Nouvelle période</button>
       </div>
       {periods.length === 0 ? (
@@ -133,7 +133,16 @@ function PeriodsTab({ periods, agencyId, onReload, showForm, setShowForm, editin
                 {DAYS.map(d => (
                   <div key={d.id} className={`p-2 rounded text-center ${p[`${d.id}IsClosed`] ? 'bg-red-50 text-red-600' : 'bg-green-50 text-green-700'}`}>
                     <div className="font-medium">{d.label.slice(0,3)}</div>
-                    {p[`${d.id}IsClosed`] ? <div>Fermé</div> : <div>{p[`${d.id}Open`] || '-'} - {p[`${d.id}Close`] || '-'}</div>}
+                    {p[`${d.id}IsClosed`] ? (
+                      <div>Fermé</div>
+                    ) : p[`${d.id}HasBreak`] ? (
+                      <div>
+                        <div>{p[`${d.id}Open`]}-{p[`${d.id}BreakStart`]}</div>
+                        <div>{p[`${d.id}BreakEnd`]}-{p[`${d.id}Close`]}</div>
+                      </div>
+                    ) : (
+                      <div>{p[`${d.id}Open`] || '-'} - {p[`${d.id}Close`] || '-'}</div>
+                    )}
                   </div>
                 ))}
               </div>
@@ -148,13 +157,27 @@ function PeriodsTab({ periods, agencyId, onReload, showForm, setShowForm, editin
 function PeriodForm({ agencyId, period, onSave, onCancel }: any) {
   const [form, setForm] = useState<Period>({
     name: period?.name || '', startDate: period?.startDate?.split('T')[0] || '', endDate: period?.endDate?.split('T')[0] || '', isDefault: period?.isDefault || false,
+    // Lundi
     mondayOpen: period?.mondayOpen || '10:00', mondayClose: period?.mondayClose || '19:00', mondayIsClosed: period?.mondayIsClosed || false,
+    mondayHasBreak: period?.mondayHasBreak || false, mondayBreakStart: period?.mondayBreakStart || '13:00', mondayBreakEnd: period?.mondayBreakEnd || '14:00',
+    // Mardi
     tuesdayOpen: period?.tuesdayOpen || '10:00', tuesdayClose: period?.tuesdayClose || '19:00', tuesdayIsClosed: period?.tuesdayIsClosed || false,
+    tuesdayHasBreak: period?.tuesdayHasBreak || false, tuesdayBreakStart: period?.tuesdayBreakStart || '13:00', tuesdayBreakEnd: period?.tuesdayBreakEnd || '14:00',
+    // Mercredi
     wednesdayOpen: period?.wednesdayOpen || '10:00', wednesdayClose: period?.wednesdayClose || '19:00', wednesdayIsClosed: period?.wednesdayIsClosed || false,
+    wednesdayHasBreak: period?.wednesdayHasBreak || false, wednesdayBreakStart: period?.wednesdayBreakStart || '13:00', wednesdayBreakEnd: period?.wednesdayBreakEnd || '14:00',
+    // Jeudi
     thursdayOpen: period?.thursdayOpen || '10:00', thursdayClose: period?.thursdayClose || '19:00', thursdayIsClosed: period?.thursdayIsClosed || false,
+    thursdayHasBreak: period?.thursdayHasBreak || false, thursdayBreakStart: period?.thursdayBreakStart || '13:00', thursdayBreakEnd: period?.thursdayBreakEnd || '14:00',
+    // Vendredi
     fridayOpen: period?.fridayOpen || '10:00', fridayClose: period?.fridayClose || '19:00', fridayIsClosed: period?.fridayIsClosed || false,
+    fridayHasBreak: period?.fridayHasBreak || false, fridayBreakStart: period?.fridayBreakStart || '13:00', fridayBreakEnd: period?.fridayBreakEnd || '14:00',
+    // Samedi
     saturdayOpen: period?.saturdayOpen || '10:00', saturdayClose: period?.saturdayClose || '19:00', saturdayIsClosed: period?.saturdayIsClosed || false,
+    saturdayHasBreak: period?.saturdayHasBreak || false, saturdayBreakStart: period?.saturdayBreakStart || '13:00', saturdayBreakEnd: period?.saturdayBreakEnd || '14:00',
+    // Dimanche
     sundayOpen: period?.sundayOpen || '10:00', sundayClose: period?.sundayClose || '19:00', sundayIsClosed: period?.sundayIsClosed ?? true,
+    sundayHasBreak: period?.sundayHasBreak || false, sundayBreakStart: period?.sundayBreakStart || '13:00', sundayBreakEnd: period?.sundayBreakEnd || '14:00',
   })
   const [saving, setSaving] = useState(false)
 
@@ -169,9 +192,19 @@ function PeriodForm({ agencyId, period, onSave, onCancel }: any) {
     setSaving(false)
   }
 
-  const applyToAllDays = (open: string, close: string) => {
+  const applyToAllDays = (open: string, close: string, hasBreak: boolean, breakStart: string, breakEnd: string) => {
     const updates: any = {}
-    DAYS.forEach(d => { if (!form[`${d.id}IsClosed`]) { updates[`${d.id}Open`] = open; updates[`${d.id}Close`] = close } })
+    DAYS.forEach(d => {
+      if (!form[`${d.id}IsClosed`]) {
+        updates[`${d.id}Open`] = open
+        updates[`${d.id}Close`] = close
+        updates[`${d.id}HasBreak`] = hasBreak
+        if (hasBreak) {
+          updates[`${d.id}BreakStart`] = breakStart
+          updates[`${d.id}BreakEnd`] = breakEnd
+        }
+      }
+    })
     setForm(prev => ({ ...prev, ...updates }))
   }
 
@@ -187,24 +220,67 @@ function PeriodForm({ agencyId, period, onSave, onCancel }: any) {
         <div><label className="block text-sm font-medium mb-1">Fin *</label><input type="date" value={form.endDate} onChange={e => setForm({ ...form, endDate: e.target.value })} className="w-full p-2 border rounded-lg" /></div>
       </div>
       <label className="flex items-center gap-2"><input type="checkbox" checked={form.isDefault} onChange={e => setForm({ ...form, isDefault: e.target.checked })} /><span className="text-sm">Période par défaut</span></label>
+      
+      {/* Appliquer à tous */}
       <div className="bg-cyan-50 p-3 rounded-lg">
-        <p className="text-sm font-medium mb-2">💡 Appliquer à tous les jours</p>
-        <div className="flex gap-2 items-center">
-          <input type="time" id="bulkOpen" defaultValue="10:00" className="p-2 border rounded" />
+        <p className="text-sm font-medium mb-2">💡 Appliquer à tous les jours ouverts</p>
+        <div className="flex flex-wrap gap-2 items-center">
+          <input type="time" id="bulkOpen" defaultValue="10:00" className="p-2 border rounded w-24" />
           <span>à</span>
-          <input type="time" id="bulkClose" defaultValue="19:00" className="p-2 border rounded" />
-          <button onClick={() => { applyToAllDays((document.getElementById('bulkOpen') as HTMLInputElement).value, (document.getElementById('bulkClose') as HTMLInputElement).value) }} className="bg-cyan-600 text-white px-3 py-2 rounded text-sm">Appliquer</button>
+          <input type="time" id="bulkClose" defaultValue="19:00" className="p-2 border rounded w-24" />
+          <label className="flex items-center gap-1 ml-2">
+            <input type="checkbox" id="bulkHasBreak" />
+            <span className="text-sm">Pause</span>
+          </label>
+          <input type="time" id="bulkBreakStart" defaultValue="13:00" className="p-2 border rounded w-24" />
+          <span>à</span>
+          <input type="time" id="bulkBreakEnd" defaultValue="14:00" className="p-2 border rounded w-24" />
+          <button onClick={() => {
+            const open = (document.getElementById('bulkOpen') as HTMLInputElement).value
+            const close = (document.getElementById('bulkClose') as HTMLInputElement).value
+            const hasBreak = (document.getElementById('bulkHasBreak') as HTMLInputElement).checked
+            const breakStart = (document.getElementById('bulkBreakStart') as HTMLInputElement).value
+            const breakEnd = (document.getElementById('bulkBreakEnd') as HTMLInputElement).value
+            applyToAllDays(open, close, hasBreak, breakStart, breakEnd)
+          }} className="bg-cyan-600 text-white px-3 py-2 rounded text-sm">Appliquer</button>
         </div>
       </div>
+
+      {/* Horaires par jour */}
       <div className="space-y-2">
+        <p className="text-sm font-medium">Horaires par jour</p>
         {DAYS.map(d => (
-          <div key={d.id} className={`flex items-center gap-3 p-2 rounded-lg ${form[`${d.id}IsClosed`] ? 'bg-red-50' : 'bg-gray-50'}`}>
-            <div className="w-24 font-medium">{d.label}</div>
-            <label className="flex items-center gap-1"><input type="checkbox" checked={form[`${d.id}IsClosed`]} onChange={e => setForm({ ...form, [`${d.id}IsClosed`]: e.target.checked })} /><span className="text-sm text-red-600">Fermé</span></label>
-            {!form[`${d.id}IsClosed`] && (<><input type="time" value={form[`${d.id}Open`] || ''} onChange={e => setForm({ ...form, [`${d.id}Open`]: e.target.value })} className="p-2 border rounded" /><span>à</span><input type="time" value={form[`${d.id}Close`] || ''} onChange={e => setForm({ ...form, [`${d.id}Close`]: e.target.value })} className="p-2 border rounded" /></>)}
+          <div key={d.id} className={`p-3 rounded-lg ${form[`${d.id}IsClosed`] ? 'bg-red-50' : 'bg-gray-50'}`}>
+            <div className="flex items-center gap-3 flex-wrap">
+              <div className="w-24 font-medium">{d.label}</div>
+              <label className="flex items-center gap-1">
+                <input type="checkbox" checked={form[`${d.id}IsClosed`]} onChange={e => setForm({ ...form, [`${d.id}IsClosed`]: e.target.checked })} />
+                <span className="text-sm text-red-600">Fermé</span>
+              </label>
+              {!form[`${d.id}IsClosed`] && (
+                <>
+                  <input type="time" value={form[`${d.id}Open`] || ''} onChange={e => setForm({ ...form, [`${d.id}Open`]: e.target.value })} className="p-2 border rounded w-24" />
+                  <span>à</span>
+                  <input type="time" value={form[`${d.id}Close`] || ''} onChange={e => setForm({ ...form, [`${d.id}Close`]: e.target.value })} className="p-2 border rounded w-24" />
+                  <label className="flex items-center gap-1 ml-2">
+                    <input type="checkbox" checked={form[`${d.id}HasBreak`] || false} onChange={e => setForm({ ...form, [`${d.id}HasBreak`]: e.target.checked })} />
+                    <span className="text-sm text-orange-600">Pause déjeuner</span>
+                  </label>
+                </>
+              )}
+            </div>
+            {!form[`${d.id}IsClosed`] && form[`${d.id}HasBreak`] && (
+              <div className="flex items-center gap-2 mt-2 ml-28 text-sm">
+                <span className="text-orange-600">Pause :</span>
+                <input type="time" value={form[`${d.id}BreakStart`] || ''} onChange={e => setForm({ ...form, [`${d.id}BreakStart`]: e.target.value })} className="p-1 border rounded w-20" />
+                <span>à</span>
+                <input type="time" value={form[`${d.id}BreakEnd`] || ''} onChange={e => setForm({ ...form, [`${d.id}BreakEnd`]: e.target.value })} className="p-1 border rounded w-20" />
+              </div>
+            )}
           </div>
         ))}
       </div>
+
       <div className="flex gap-3 pt-4">
         <button onClick={onCancel} className="flex-1 py-2 bg-gray-200 rounded-lg">Annuler</button>
         <button onClick={handleSave} disabled={saving} className="flex-1 py-2 bg-cyan-600 text-white rounded-lg disabled:opacity-50">{saving ? 'Enregistrement...' : 'Enregistrer'}</button>
