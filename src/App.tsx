@@ -23,7 +23,7 @@ function App() {
   const [scheduleAgency, setScheduleAgency] = useState<Agency | null>(null)
   const [entreprise, setEntreprise] = useState({ raisonSociale: '', nomCommercial: '', adresse: '', codePostal: '', ville: '', pays: 'Espagne', nif: '', tvaIntra: '', email: '', telephone: '', siteWeb: '' })
 
-  useEffect(() => { loadAllData() }, [])
+  useEffect(() => { loadAllData(); loadEntreprise() }, [])
 
   const loadAllData = async () => {
     try {
@@ -40,6 +40,28 @@ function App() {
       setOptions(await optRes.json())
     } catch (e) { console.error(e) }
     setLoading(false)
+  }
+
+  const loadEntreprise = async () => {
+    try {
+      const res = await fetch(API_URL + "/api/settings/entreprise-voltride")
+      if (res.ok) {
+        const data = await res.json()
+        if (data) setEntreprise(data)
+      }
+    } catch (e) { console.error(e) }
+  }
+
+  const saveEntreprise = async () => {
+    try {
+      await fetch(API_URL + "/api/settings/entreprise-voltride", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(entreprise)
+      })
+      alert("Informations entreprise sauvegardées !")
+    } catch (e) { alert("Erreur lors de la sauvegarde") }
+  
   }
 
   const handleSave = async (type: string, data: any) => {
@@ -163,7 +185,7 @@ function App() {
                 <div><label className="block text-sm font-medium mb-1">Téléphone</label><input type="tel" value={entreprise.telephone} onChange={e => setEntreprise({...entreprise, telephone: e.target.value})} className="w-full border rounded-lg px-3 py-2" /></div>
               </div>
               <div><label className="block text-sm font-medium mb-1">Site Web</label><input type="url" value={entreprise.siteWeb} onChange={e => setEntreprise({...entreprise, siteWeb: e.target.value})} className="w-full border rounded-lg px-3 py-2" placeholder="https://www.voltride.com" /></div>
-              <button onClick={() => alert('Sauvegardé! (API à connecter)')} className="bg-cyan-600 text-white px-6 py-2 rounded-lg">Sauvegarder</button>
+              <button onClick={saveEntreprise} className="bg-cyan-600 text-white px-6 py-2 rounded-lg">Sauvegarder</button>
             </div>
           </div>
         )}
