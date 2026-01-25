@@ -1,0 +1,23 @@
+{
+  "name": "Back Office Voltride",
+  "short_name": "BO Voltride",
+  "description": "Administration Voltride",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#abdee6",
+  "theme_color": "#abdee6",
+  "icons": [
+    {
+      "src": "https://res.cloudinary.com/dis5pcnfr/image/upload/v1769278425/IMG-20260111-WA0001_1_-removebg-preview_zzajxa.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "https://res.cloudinary.com/dis5pcnfr/image/upload/v1769278425/IMG-20260111-WA0001_1_-removebg-preview_zzajxa.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}
