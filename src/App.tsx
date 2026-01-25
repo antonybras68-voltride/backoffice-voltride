@@ -22,8 +22,9 @@ function App() {
   const [editItem, setEditItem] = useState<any>(null)
   const [scheduleAgency, setScheduleAgency] = useState<Agency | null>(null)
   const [entreprise, setEntreprise] = useState({ raisonSociale: '', nomCommercial: '', adresse: '', codePostal: '', ville: '', pays: 'Espagne', nif: '', tvaIntra: '', email: '', telephone: '', siteWeb: '' })
+  const [widgetSettings, setWidgetSettings] = useState({ stripeEnabled: false, stripeMode: 'test', stripePublishableKey: '', stripeSecretKey: '', minDays: 1, maxDays: 30 })
 
-  useEffect(() => { loadAllData(); loadEntreprise() }, [])
+  useEffect(() => { loadAllData(); loadEntreprise(); loadWidgetSettings() }, [])
 
   const loadAllData = async () => {
     try {
@@ -60,6 +61,27 @@ function App() {
         body: JSON.stringify(entreprise)
       })
       alert("Informations entreprise sauvegardées !")
+    } catch (e) { alert("Erreur lors de la sauvegarde") }
+  }
+
+  const loadWidgetSettings = async () => {
+    try {
+      const res = await fetch(API_URL + "/api/settings/widget-voltride")
+      if (res.ok) {
+        const data = await res.json()
+        if (data) setWidgetSettings(data)
+      }
+    } catch (e) { console.error(e) }
+  }
+
+  const saveWidgetSettings = async () => {
+    try {
+      await fetch(API_URL + "/api/settings/widget-voltride", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(widgetSettings)
+      })
+      alert("Paramètres widget sauvegardés !")
     } catch (e) { alert("Erreur lors de la sauvegarde") }
   
   }
@@ -190,12 +212,33 @@ function App() {
           </div>
         )}
 
-        {tab === 'widget' && (
+        {tab === "widget" && (
           <div className="max-w-2xl">
             <h2 className="text-xl font-bold mb-4">🎨 Paramètres Widget</h2>
             <div className="bg-white rounded-xl shadow p-6 space-y-4">
               <div><label className="block text-sm font-medium mb-1">URL du Widget</label><div className="flex gap-2"><input type="text" className="flex-1 border rounded-lg px-3 py-2 bg-gray-50" value="https://widget-voltride-production.up.railway.app" readOnly /><a href="https://widget-voltride-production.up.railway.app" target="_blank" rel="noreferrer" className="bg-cyan-600 text-white px-4 py-2 rounded-lg text-sm whitespace-nowrap">Ouvrir ↗</a></div></div>
-              <div className="bg-cyan-50 p-4 rounded-lg"><p className="text-sm">ℹ️ Le widget utilise les données de ce backoffice automatiquement.</p></div>
+              <div className="border-t pt-4 mt-4">
+                <h3 className="font-bold text-lg mb-3">💳 Configuration Stripe</h3>
+                <div className="space-y-3">
+                  <label className="flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:bg-gray-50"><input type="checkbox" checked={widgetSettings.stripeEnabled} onChange={e => setWidgetSettings({...widgetSettings, stripeEnabled: e.target.checked})} className="w-5 h-5" /><div><p className="font-medium">Activer le paiement Stripe</p><p className="text-xs text-gray-500">Permet aux clients de payer en ligne</p></div></label>
+                  {widgetSettings.stripeEnabled && (
+                    <>
+                      <div><label className="block text-sm font-medium mb-1">Mode</label><select value={widgetSettings.stripeMode} onChange={e => setWidgetSettings({...widgetSettings, stripeMode: e.target.value})} className="w-full border rounded-lg px-3 py-2"><option value="test">🧪 Test (sandbox)</option><option value="live">🟢 Production (live)</option></select></div>
+                      <div><label className="block text-sm font-medium mb-1">Clé publique (Publishable Key)</label><input type="text" value={widgetSettings.stripePublishableKey} onChange={e => setWidgetSettings({...widgetSettings, stripePublishableKey: e.target.value})} className="w-full border rounded-lg px-3 py-2 font-mono text-sm" placeholder="pk_test_..." /></div>
+                      <div><label className="block text-sm font-medium mb-1">Clé secrète (Secret Key)</label><input type="password" value={widgetSettings.stripeSecretKey} onChange={e => setWidgetSettings({...widgetSettings, stripeSecretKey: e.target.value})} className="w-full border rounded-lg px-3 py-2 font-mono text-sm" placeholder="sk_test_..." /><p className="text-xs text-gray-500 mt-1">⚠️ Ne jamais partager cette clé</p></div>
+                      <div className={"p-3 rounded-lg " + (widgetSettings.stripeMode === "live" ? "bg-green-50 border border-green-200" : "bg-yellow-50 border border-yellow-200")}><p className="text-sm">{widgetSettings.stripeMode === "live" ? "🟢 Mode PRODUCTION - Les paiements seront réels" : "🧪 Mode TEST - Utilisez les cartes de test Stripe"}</p></div>
+                    </>
+                  )}
+                </div>
+              </div>
+              <div className="border-t pt-4 mt-4">
+                <h3 className="font-bold mb-3">📅 Durée de location</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div><label className="block text-sm font-medium mb-1">Minimum (jours)</label><input type="number" value={widgetSettings.minDays} onChange={e => setWidgetSettings({...widgetSettings, minDays: parseInt(e.target.value) || 1})} className="w-full border rounded-lg px-3 py-2" min="1" /></div>
+                  <div><label className="block text-sm font-medium mb-1">Maximum (jours)</label><input type="number" value={widgetSettings.maxDays} onChange={e => setWidgetSettings({...widgetSettings, maxDays: parseInt(e.target.value) || 30})} className="w-full border rounded-lg px-3 py-2" min="1" /></div>
+                </div>
+              </div>
+              <button onClick={saveWidgetSettings} className="bg-cyan-600 text-white px-6 py-2 rounded-lg hover:bg-cyan-700 transition">Sauvegarder</button>
             </div>
           </div>
         )}
