@@ -23,8 +23,10 @@ function App() {
   const [scheduleAgency, setScheduleAgency] = useState<Agency | null>(null)
   const [entreprise, setEntreprise] = useState({ raisonSociale: '', nomCommercial: '', adresse: '', codePostal: '', ville: '', pays: 'Espagne', nif: '', tvaIntra: '', email: '', telephone: '', siteWeb: '' })
   const [widgetSettings, setWidgetSettings] = useState({ stripeEnabled: false, stripeMode: 'test', stripePublishableKey: '', stripeSecretKey: '', minDays: 1, maxDays: 30 })
+  const [operatorSettings, setOperatorSettings] = useState({ emailNotifications: true, notificationEmail: '', smsNotifications: false, smsPhone: '', autoAssign: true, showCustomerPhone: true })
+  const [comptaSettings, setComptaSettings] = useState({ tvaRate: 21, currency: 'EUR', invoicePrefix: 'VR-', invoiceNextNumber: 1, paymentTerms: 30, bankName: '', bankIban: '', bankBic: '' })
 
-  useEffect(() => { loadAllData(); loadEntreprise(); loadWidgetSettings() }, [])
+  useEffect(() => { loadAllData(); loadEntreprise(); loadWidgetSettings(); loadOperatorSettings(); loadComptaSettings() }, [])
 
   const loadAllData = async () => {
     try {
@@ -84,6 +86,34 @@ function App() {
       alert("Paramètres widget sauvegardés !")
     } catch (e) { alert("Erreur lors de la sauvegarde") }
   
+  }
+
+  const loadOperatorSettings = async () => {
+    try {
+      const res = await fetch(API_URL + "/api/settings/operator-voltride")
+      if (res.ok) { const data = await res.json(); if (data) setOperatorSettings(data) }
+    } catch (e) { console.error(e) }
+  }
+
+  const saveOperatorSettings = async () => {
+    try {
+      await fetch(API_URL + "/api/settings/operator-voltride", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(operatorSettings) })
+      alert("Paramètres operator sauvegardés !")
+    } catch (e) { alert("Erreur lors de la sauvegarde") }
+  }
+
+  const loadComptaSettings = async () => {
+    try {
+      const res = await fetch(API_URL + "/api/settings/compta-voltride")
+      if (res.ok) { const data = await res.json(); if (data) setComptaSettings(data) }
+    } catch (e) { console.error(e) }
+  }
+
+  const saveComptaSettings = async () => {
+    try {
+      await fetch(API_URL + "/api/settings/compta-voltride", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(comptaSettings) })
+      alert("Paramètres comptabilité sauvegardés !")
+    } catch (e) { alert("Erreur lors de la sauvegarde") }
   }
 
   const handleSave = async (type: string, data: any) => {
@@ -243,22 +273,90 @@ function App() {
           </div>
         )}
 
-        {tab === 'operator' && (
+        {tab === "operator" && (
           <div className="max-w-2xl">
             <h2 className="text-xl font-bold mb-4">👤 Paramètres Operator</h2>
             <div className="bg-white rounded-xl shadow p-6 space-y-4">
               <div><label className="block text-sm font-medium mb-1">URL Operator</label><div className="flex gap-2"><input type="text" className="flex-1 border rounded-lg px-3 py-2 bg-gray-50" value="https://operator-production-188c.up.railway.app" readOnly /><a href="https://operator-production-188c.up.railway.app" target="_blank" rel="noreferrer" className="bg-cyan-600 text-white px-4 py-2 rounded-lg text-sm whitespace-nowrap">Ouvrir ↗</a></div></div>
+              <div className="border-t pt-4 mt-4">
+                <h3 className="font-bold mb-3">📧 Notifications</h3>
+                <div className="space-y-3">
+                  <label className="flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:bg-gray-50"><input type="checkbox" checked={operatorSettings.emailNotifications} onChange={e => setOperatorSettings({...operatorSettings, emailNotifications: e.target.checked})} className="w-5 h-5" /><div><p className="font-medium">Notifications par email</p><p className="text-xs text-gray-500">Recevoir les nouvelles réservations par email</p></div></label>
+                  {operatorSettings.emailNotifications && <div><label className="block text-sm font-medium mb-1">Email de notification</label><input type="email" value={operatorSettings.notificationEmail} onChange={e => setOperatorSettings({...operatorSettings, notificationEmail: e.target.value})} className="w-full border rounded-lg px-3 py-2" placeholder="notifications@voltride.com" /></div>}
+                  <label className="flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:bg-gray-50"><input type="checkbox" checked={operatorSettings.smsNotifications} onChange={e => setOperatorSettings({...operatorSettings, smsNotifications: e.target.checked})} className="w-5 h-5" /><div><p className="font-medium">Notifications SMS</p><p className="text-xs text-gray-500">Recevoir les alertes urgentes par SMS</p></div></label>
+                  {operatorSettings.smsNotifications && <div><label className="block text-sm font-medium mb-1">Téléphone SMS</label><input type="tel" value={operatorSettings.smsPhone} onChange={e => setOperatorSettings({...operatorSettings, smsPhone: e.target.value})} className="w-full border rounded-lg px-3 py-2" placeholder="+34 600 000 000" /></div>}
+                </div>
+              </div>
+              <div className="border-t pt-4 mt-4">
+                <h3 className="font-bold mb-3">⚙️ Options</h3>
+                <div className="space-y-3">
+                  <label className="flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:bg-gray-50"><input type="checkbox" checked={operatorSettings.autoAssign} onChange={e => setOperatorSettings({...operatorSettings, autoAssign: e.target.checked})} className="w-5 h-5" /><div><p className="font-medium">Auto-assignation véhicules</p><p className="text-xs text-gray-500">Assigner automatiquement un véhicule de la flotte</p></div></label>
+                  <label className="flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:bg-gray-50"><input type="checkbox" checked={operatorSettings.showCustomerPhone} onChange={e => setOperatorSettings({...operatorSettings, showCustomerPhone: e.target.checked})} className="w-5 h-5" /><div><p className="font-medium">Afficher téléphone client</p><p className="text-xs text-gray-500">Montrer le numéro de téléphone dans la liste</p></div></label>
+                </div>
+              </div>
+              <button onClick={saveOperatorSettings} className="bg-cyan-600 text-white px-6 py-2 rounded-lg hover:bg-cyan-700 transition">Sauvegarder</button>
             </div>
           </div>
         )}
-
-        {tab === 'comptabilite' && (
+        {tab === "comptabilite" && (
           <div className="max-w-2xl">
             <h2 className="text-xl font-bold mb-4">💰 Paramètres Comptabilité</h2>
             <div className="bg-white rounded-xl shadow p-6 space-y-4">
-              <div><label className="block text-sm font-medium mb-1">Taux TVA (%)</label><input type="number" className="w-full border rounded-lg px-3 py-2" defaultValue="21" /></div>
-              <div><label className="block text-sm font-medium mb-1">Préfixe factures</label><input type="text" className="w-full border rounded-lg px-3 py-2" defaultValue="VR-" /></div>
-              <button className="bg-cyan-600 text-white px-6 py-2 rounded-lg">Sauvegarder</button>
+              <div className="grid grid-cols-2 gap-4">
+                <div><label className="block text-sm font-medium mb-1">Taux TVA (%)</label><input type="number" value={comptaSettings.tvaRate} onChange={e => setComptaSettings({...comptaSettings, tvaRate: parseFloat(e.target.value) || 21})} className="w-full border rounded-lg px-3 py-2" /></div>
+                <div><label className="block text-sm font-medium mb-1">Devise</label><select value={comptaSettings.currency} onChange={e => setComptaSettings({...comptaSettings, currency: e.target.value})} className="w-full border rounded-lg px-3 py-2"><option value="EUR">EUR (€)</option><option value="USD">USD ($)</option><option value="GBP">GBP (£)</option></select></div>
+              </div>
+              <div className="border-t pt-4 mt-4">
+                <h3 className="font-bold mb-3">🧾 Factures</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div><label className="block text-sm font-medium mb-1">Préfixe factures</label><input type="text" value={comptaSettings.invoicePrefix} onChange={e => setComptaSettings({...comptaSettings, invoicePrefix: e.target.value})} className="w-full border rounded-lg px-3 py-2" placeholder="VR-" /></div>
+                  <div><label className="block text-sm font-medium mb-1">Prochain numéro</label><input type="number" value={comptaSettings.invoiceNextNumber} onChange={e => setComptaSettings({...comptaSettings, invoiceNextNumber: parseInt(e.target.value) || 1})} className="w-full border rounded-lg px-3 py-2" /></div>
+                </div>
+                <div className="mt-3"><label className="block text-sm font-medium mb-1">Délai de paiement (jours)</label><input type="number" value={comptaSettings.paymentTerms} onChange={e => setComptaSettings({...comptaSettings, paymentTerms: parseInt(e.target.value) || 30})} className="w-full border rounded-lg px-3 py-2" /></div>
+              </div>
+              <div className="border-t pt-4 mt-4">
+                <h3 className="font-bold mb-3">🏦 Coordonnées bancaires</h3>
+                <div className="space-y-3">
+                  <div><label className="block text-sm font-medium mb-1">Nom de la banque</label><input type="text" value={comptaSettings.bankName} onChange={e => setComptaSettings({...comptaSettings, bankName: e.target.value})} className="w-full border rounded-lg px-3 py-2" placeholder="Banco Santander" /></div>
+                  <div><label className="block text-sm font-medium mb-1">IBAN</label><input type="text" value={comptaSettings.bankIban} onChange={e => setComptaSettings({...comptaSettings, bankIban: e.target.value})} className="w-full border rounded-lg px-3 py-2 font-mono" placeholder="ES00 0000 0000 0000 0000 0000" /></div>
+                  <div><label className="block text-sm font-medium mb-1">BIC/SWIFT</label><input type="text" value={comptaSettings.bankBic} onChange={e => setComptaSettings({...comptaSettings, bankBic: e.target.value})} className="w-full border rounded-lg px-3 py-2 font-mono" placeholder="BSCHESMMXXX" /></div>
+                </div>
+              </div>
+              <button onClick={saveComptaSettings} className="bg-cyan-600 text-white px-6 py-2 rounded-lg hover:bg-cyan-700 transition">Sauvegarder</button>
+            </div>
+          </div>
+        )}
+                </div>
+              </div>
+              <button onClick={saveOperatorSettings} className="bg-cyan-600 text-white px-6 py-2 rounded-lg hover:bg-cyan-700 transition">Sauvegarder</button>
+            </div>
+          </div>
+        )}
+        {tab === "comptabilite" && (
+          <div className="max-w-2xl">
+            <h2 className="text-xl font-bold mb-4">💰 Paramètres Comptabilité</h2>
+            <div className="bg-white rounded-xl shadow p-6 space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div><label className="block text-sm font-medium mb-1">Taux TVA (%)</label><input type="number" value={comptaSettings.tvaRate} onChange={e => setComptaSettings({...comptaSettings, tvaRate: parseFloat(e.target.value) || 21})} className="w-full border rounded-lg px-3 py-2" /></div>
+                <div><label className="block text-sm font-medium mb-1">Devise</label><select value={comptaSettings.currency} onChange={e => setComptaSettings({...comptaSettings, currency: e.target.value})} className="w-full border rounded-lg px-3 py-2"><option value="EUR">EUR (€)</option><option value="USD">USD ($)</option><option value="GBP">GBP (£)</option></select></div>
+              </div>
+              <div className="border-t pt-4 mt-4">
+                <h3 className="font-bold mb-3">🧾 Factures</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div><label className="block text-sm font-medium mb-1">Préfixe factures</label><input type="text" value={comptaSettings.invoicePrefix} onChange={e => setComptaSettings({...comptaSettings, invoicePrefix: e.target.value})} className="w-full border rounded-lg px-3 py-2" placeholder="VR-" /></div>
+                  <div><label className="block text-sm font-medium mb-1">Prochain numéro</label><input type="number" value={comptaSettings.invoiceNextNumber} onChange={e => setComptaSettings({...comptaSettings, invoiceNextNumber: parseInt(e.target.value) || 1})} className="w-full border rounded-lg px-3 py-2" /></div>
+                </div>
+                <div className="mt-3"><label className="block text-sm font-medium mb-1">Délai de paiement (jours)</label><input type="number" value={comptaSettings.paymentTerms} onChange={e => setComptaSettings({...comptaSettings, paymentTerms: parseInt(e.target.value) || 30})} className="w-full border rounded-lg px-3 py-2" /></div>
+              </div>
+              <div className="border-t pt-4 mt-4">
+                <h3 className="font-bold mb-3">🏦 Coordonnées bancaires</h3>
+                <div className="space-y-3">
+                  <div><label className="block text-sm font-medium mb-1">Nom de la banque</label><input type="text" value={comptaSettings.bankName} onChange={e => setComptaSettings({...comptaSettings, bankName: e.target.value})} className="w-full border rounded-lg px-3 py-2" placeholder="Banco Santander" /></div>
+                  <div><label className="block text-sm font-medium mb-1">IBAN</label><input type="text" value={comptaSettings.bankIban} onChange={e => setComptaSettings({...comptaSettings, bankIban: e.target.value})} className="w-full border rounded-lg px-3 py-2 font-mono" placeholder="ES00 0000 0000 0000 0000 0000" /></div>
+                  <div><label className="block text-sm font-medium mb-1">BIC/SWIFT</label><input type="text" value={comptaSettings.bankBic} onChange={e => setComptaSettings({...comptaSettings, bankBic: e.target.value})} className="w-full border rounded-lg px-3 py-2 font-mono" placeholder="BSCHESMMXXX" /></div>
+                </div>
+              </div>
+              <button onClick={saveComptaSettings} className="bg-cyan-600 text-white px-6 py-2 rounded-lg hover:bg-cyan-700 transition">Sauvegarder</button>
             </div>
           </div>
         )}
