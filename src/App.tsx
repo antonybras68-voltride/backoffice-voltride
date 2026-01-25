@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react'
 
-const API_URL = 'https://voltride-booking-production.up.railway.app'
+const API_URL = 'https://api-voltrideandmotorrent-production.up.railway.app'
 const BRAND = 'VOLTRIDE'
 
-type Tab = 'vehicles' | 'agencies' | 'categories' | 'options'
+type Tab = 'vehicles' | 'agencies' | 'categories' | 'options' | 'widget' | 'operator' | 'comptabilite'
 
 interface Agency { id: string; code: string; name: any; address: string; city: string; postalCode: string; country: string; phone: string; email: string; brand: string; openingTime: string; closingTimeSummer: string; closingTimeWinter: string; isActive: boolean; agencyType: string }
 interface Category { id: string; code: string; name: any; brand: string; bookingFee: number; _count?: { vehicles: number } }
@@ -55,14 +55,27 @@ function App() {
           <h1 className="text-xl font-bold">Back Office</h1>
           <p className="text-sm opacity-80">Voltride</p>
         </div>
-        <nav className="space-y-2">
+        <nav className="space-y-1">
+          <p className="text-xs uppercase text-white/50 px-4 pt-4">Données</p>
           {[
             { id: 'vehicles', label: 'Véhicules', icon: '🚲' },
             { id: 'categories', label: 'Catégories', icon: '📁' },
             { id: 'agencies', label: 'Agences', icon: '🏢' },
-            { id: 'options', label: 'Options', icon: '⚙️' },
+            { id: 'options', label: 'Options', icon: '🔧' },
           ].map(item => (
-            <button key={item.id} onClick={() => setTab(item.id as Tab)} className={'w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 transition ' + (tab === item.id ? 'bg-white/20 font-bold' : 'hover:bg-white/10')}>
+            <button key={item.id} onClick={() => setTab(item.id as Tab)} className={'w-full text-left px-4 py-2 rounded-lg flex items-center gap-3 transition text-sm ' + (tab === item.id ? 'bg-white/20 font-bold' : 'hover:bg-white/10')}>
+              <span>{item.icon}</span>
+              {item.label}
+            </button>
+          ))}
+          
+          <p className="text-xs uppercase text-white/50 px-4 pt-6">Paramètres Apps</p>
+          {[
+            { id: 'widget', label: 'Widget', icon: '🎨' },
+            { id: 'operator', label: 'Operator', icon: '👤' },
+            { id: 'comptabilite', label: 'Comptabilité', icon: '💰' },
+          ].map(item => (
+            <button key={item.id} onClick={() => setTab(item.id as Tab)} className={'w-full text-left px-4 py-2 rounded-lg flex items-center gap-3 transition text-sm ' + (tab === item.id ? 'bg-white/20 font-bold' : 'hover:bg-white/10')}>
               <span>{item.icon}</span>
               {item.label}
             </button>
@@ -76,7 +89,7 @@ function App() {
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 p-8">
+      <div className="flex-1 p-8 overflow-auto">
         {tab === 'vehicles' && (
           <div>
             <div className="flex justify-between items-center mb-6">
@@ -99,6 +112,7 @@ function App() {
                   </div>
                 </div>
               ))}
+              {vehicles.length === 0 && <p className="text-gray-500 col-span-3">Aucun véhicule Voltride trouvé</p>}
             </div>
           </div>
         )}
@@ -118,6 +132,7 @@ function App() {
                   <p className="text-sm text-gray-500">{c._count?.vehicles || 0} véhicules</p>
                 </div>
               ))}
+              {categories.length === 0 && <p className="text-gray-500 col-span-3">Aucune catégorie Voltride trouvée</p>}
             </div>
           </div>
         )}
@@ -144,6 +159,7 @@ function App() {
                   </div>
                 </div>
               ))}
+              {agencies.length === 0 && <p className="text-gray-500 col-span-2">Aucune agence Voltride trouvée</p>}
             </div>
           </div>
         )}
@@ -163,6 +179,135 @@ function App() {
                   <p className="text-sm text-cyan-600">J1: {o.day1}€ | J2: {o.day2}€ | J3: {o.day3}€</p>
                 </div>
               ))}
+            </div>
+          </div>
+        )}
+
+        {tab === 'widget' && (
+          <div>
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-2xl font-bold text-gray-800">Paramètres Widget</h2>
+            </div>
+            <div className="bg-white rounded-xl shadow p-6 max-w-2xl">
+              <h3 className="font-bold text-lg mb-4">Configuration du Widget de Réservation</h3>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">URL du Widget</label>
+                  <input type="text" className="w-full border rounded-lg px-3 py-2 bg-gray-50" value="https://widget-voltride.up.railway.app" readOnly />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Couleur principale</label>
+                  <div className="flex gap-2">
+                    <input type="color" value="#abdee6" className="w-12 h-10 rounded cursor-pointer" />
+                    <input type="text" className="flex-1 border rounded-lg px-3 py-2" value="#abdee6" readOnly />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Afficher les prix</label>
+                  <select className="w-full border rounded-lg px-3 py-2">
+                    <option>Oui - Afficher tous les prix</option>
+                    <option>Non - Masquer les prix</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Durée minimum de location (jours)</label>
+                  <input type="number" className="w-full border rounded-lg px-3 py-2" defaultValue="1" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Durée maximum de location (jours)</label>
+                  <input type="number" className="w-full border rounded-lg px-3 py-2" defaultValue="30" />
+                </div>
+                <button className="bg-cyan-600 text-white px-6 py-2 rounded-lg hover:bg-cyan-700 transition">
+                  Sauvegarder
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {tab === 'operator' && (
+          <div>
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-2xl font-bold text-gray-800">Paramètres Operator</h2>
+            </div>
+            <div className="bg-white rounded-xl shadow p-6 max-w-2xl">
+              <h3 className="font-bold text-lg mb-4">Configuration de l'App Operator</h3>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">URL de l'App Operator</label>
+                  <input type="text" className="w-full border rounded-lg px-3 py-2 bg-gray-50" value="https://operator-production-188c.up.railway.app" readOnly />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Notifications par email</label>
+                  <select className="w-full border rounded-lg px-3 py-2">
+                    <option>Activées</option>
+                    <option>Désactivées</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Email de notification</label>
+                  <input type="email" className="w-full border rounded-lg px-3 py-2" placeholder="notifications@voltride.com" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Délai de rappel avant retour (heures)</label>
+                  <input type="number" className="w-full border rounded-lg px-3 py-2" defaultValue="24" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Auto-assignation des véhicules</label>
+                  <select className="w-full border rounded-lg px-3 py-2">
+                    <option>Activée - Assigner automatiquement</option>
+                    <option>Désactivée - Assignation manuelle</option>
+                  </select>
+                </div>
+                <button className="bg-cyan-600 text-white px-6 py-2 rounded-lg hover:bg-cyan-700 transition">
+                  Sauvegarder
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {tab === 'comptabilite' && (
+          <div>
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-2xl font-bold text-gray-800">Paramètres Comptabilité</h2>
+            </div>
+            <div className="bg-white rounded-xl shadow p-6 max-w-2xl">
+              <h3 className="font-bold text-lg mb-4">Configuration Comptable</h3>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Taux de TVA (%)</label>
+                  <input type="number" className="w-full border rounded-lg px-3 py-2" defaultValue="21" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Devise</label>
+                  <select className="w-full border rounded-lg px-3 py-2">
+                    <option>EUR (€)</option>
+                    <option>USD ($)</option>
+                    <option>GBP (£)</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Préfixe des factures</label>
+                  <input type="text" className="w-full border rounded-lg px-3 py-2" defaultValue="VR-" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Email comptabilité</label>
+                  <input type="email" className="w-full border rounded-lg px-3 py-2" placeholder="compta@voltride.com" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Export automatique</label>
+                  <select className="w-full border rounded-lg px-3 py-2">
+                    <option>Quotidien</option>
+                    <option>Hebdomadaire</option>
+                    <option>Mensuel</option>
+                    <option>Désactivé</option>
+                  </select>
+                </div>
+                <button className="bg-cyan-600 text-white px-6 py-2 rounded-lg hover:bg-cyan-700 transition">
+                  Sauvegarder
+                </button>
+              </div>
             </div>
           </div>
         )}
