@@ -404,7 +404,7 @@ function VehicleModal({ vehicle, categories, onSave, onClose }: any) {
   const [form, setForm] = useState({ sku: vehicle?.sku || '', nameFr: vehicle?.name?.fr || '', nameEs: vehicle?.name?.es || '', nameEn: vehicle?.name?.en || '', deposit: vehicle?.deposit || 0, hasPlate: vehicle?.hasPlate || false, categoryId: vehicle?.categoryId || '', imageUrl: vehicle?.imageUrl || '', pricing: vehicle?.pricing?.[0] || {} })
   const [uploading, setUploading] = useState(false)
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => { const file = e.target.files?.[0]; if (!file) return; setUploading(true); const fd = new FormData(); fd.append('file', file); fd.append('upload_preset', 'voltride'); const res = await fetch('https://api.cloudinary.com/v1_1/dis5pcnfr/image/upload', { method: 'POST', body: fd }); const data = await res.json(); setForm({ ...form, imageUrl: data.secure_url }); setUploading(false) }
-  const handleSubmit = () => onSave({ sku: form.sku, name: { fr: form.nameFr, es: form.nameEs, en: form.nameEn }, deposit: parseFloat(String(form.deposit)), hasPlate: form.hasPlate, categoryId: form.categoryId, imageUrl: form.imageUrl, pricing: form.pricing })
+  const handleSubmit = () => onSave({ sku: form.sku, name: { fr: form.nameFr, es: form.nameEs, en: form.nameEn }, description: {}, deposit: parseFloat(String(form.deposit)), hasPlate: form.hasPlate, categoryId: form.categoryId, imageUrl: form.imageUrl, pricing: form.pricing })
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"><div className="bg-white rounded-xl p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
       <h3 className="text-xl font-bold mb-4">{vehicle ? 'Modifier' : 'Ajouter'} Véhicule</h3>
