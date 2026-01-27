@@ -4,7 +4,7 @@ import { AgencyScheduleModal } from './AgencyScheduleModal'
 const API_URL = 'https://api-voltrideandmotorrent-production.up.railway.app'
 const BRAND = 'VOLTRIDE'
 
-type Tab = 'vehicles' | 'agencies' | 'categories' | 'options' | 'entreprise' | 'widget' | 'operator' | 'comptabilite'
+type Tab = 'vehicles' | 'reservations' | 'agencies' | 'categories' | 'options' | 'entreprise' | 'widget' | 'operator' | 'comptabilite'
 
 interface Agency { id: string; code: string; name: any; address: string; city: string; postalCode: string; country: string; phone: string; email: string; brand: string; isActive: boolean; agencyType: string; commissionRate?: number; commissionEmail?: string; showStockUrgency?: boolean }
 interface Category { id: string; code: string; name: any; brand: string; bookingFee: number; bookingFeePercentLow?: number; bookingFeePercentHigh?: number; _count?: { vehicles: number } }
@@ -16,6 +16,7 @@ function App() {
   const [agencies, setAgencies] = useState<Agency[]>([])
   const [categories, setCategories] = useState<Category[]>([])
   const [vehicles, setVehicles] = useState<Vehicle[]>([])
+  const [bookings, setBookings] = useState<any[]>([])
   const [options, setOptions] = useState<Option[]>([])
   const [loading, setLoading] = useState(true)
   const [showModal, setShowModal] = useState<string | null>(null)
@@ -30,8 +31,8 @@ function App() {
 
   const loadAllData = async () => {
     try {
-      const [agRes, catRes, vehRes, optRes] = await Promise.all([
-        fetch(API_URL + '/api/agencies'), fetch(API_URL + '/api/categories'), fetch(API_URL + '/api/vehicles'), fetch(API_URL + '/api/options')
+  const [agRes, catRes, vehRes, optRes, bookRes] = await Promise.all([
+        fetch(API_URL + '/api/agencies'), fetch(API_URL + '/api/categories'), fetch(API_URL + '/api/vehicles'), fetch(API_URL + '/api/options'), fetch(API_URL + '/api/bookings')
       ])
       const allAgencies = await agRes.json()
       const allCategories = await catRes.json()
@@ -41,7 +42,9 @@ function App() {
       const catIds = allCategories.filter((c: Category) => c.brand === BRAND).map((c: Category) => c.id)
       setVehicles(allVehicles.filter((v: Vehicle) => catIds.includes(v.categoryId)))
       setOptions(await optRes.json())
-    } catch (e) { console.error(e) }
+const allBookings = await bookRes.json()
+      setBookings(allBookings.filter((b: any) => b.agency?.brand === BRAND))   
+ } catch (e) { console.error(e) }
     setLoading(false)
   }
 
@@ -141,7 +144,7 @@ function App() {
         </div>
         <nav className="space-y-1">
           <p className="text-xs uppercase text-white/50 px-3 pt-2">Données</p>
-          {[{ id: 'vehicles', label: 'Véhicules', icon: '🚲' }, { id: 'categories', label: 'Catégories', icon: '📁' }, { id: 'agencies', label: 'Agences', icon: '🏢' }, { id: 'options', label: 'Options', icon: '🔧' }].map(item => (
+          {[{ id: 'reservations', label: 'Réservations', icon: '📅' }, { id: 'vehicles', label: 'Véhicules', icon: '🚲' }, { id: 'categories', label: 'Catégories', icon: '📁' }, { id: 'agencies', label: 'Agences', icon: '🏢' }, { id: 'options', label: 'Options', icon: '🔧' }].map(item => (
             <button key={item.id} onClick={() => setTab(item.id as Tab)} className={'w-full text-left px-3 py-2 rounded-lg flex items-center gap-2 transition text-sm ' + (tab === item.id ? 'bg-white/20 font-bold' : 'hover:bg-white/10')}><span>{item.icon}</span>{item.label}</button>
           ))}
           <p className="text-xs uppercase text-white/50 px-3 pt-4">Paramètres</p>
@@ -153,6 +156,66 @@ function App() {
       </div>
 
       <div className="flex-1 p-6 overflow-auto">
+{tab === 'reservations' && (
+          <div>
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-bold">Réservations Voltride</h2>
+              <span className="text-sm text-gray-500">{bookings.length} réservation(s)</span>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead className="bg-gray-100">
+                  <tr>
+                    <th className="px-3 py-2 text-left">Réf</th>
+                    <th className="px-3 py-2 text-left">Client</th>
+                    <th className="px-3 py-2 text-left">Dates</th>
+                    <th className="px-3 py-2 text-left">Agence</th>
+                    <th className="px-3 py-2 text-left">Total</th>
+                    <th className="px-3 py-2 text-left">Statut</th>
+                    <th className="px-3 py-2 text-left">Caution</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {bookings.map((b: any) => (
+                    <tr key={b.id} className="border-b hover:bg-gray-50">
+                      <td className="px-3 py-2 font-mono text-cyan-600">{b.reference}</td>
+                      <td className="px-3 py-2">{b.customer?.firstName} {b.customer?.lastName}</td>
+                      <td className="px-3 py-2 text-xs">
+                        {new Date(b.startDate).toLocaleDateString('fr-FR')} - {new Date(b.endDate).toLocaleDateString('fr-FR')}
+                      </td>
+                      <td className="px-3 py-2">{b.agency?.name?.fr || b.agency?.code}</td>
+                      <td className="px-3 py-2 font-bold">{b.totalPrice}€</td>
+                      <td className="px-3 py-2">
+                        <span className={`px-2 py-1 rounded text-xs ${
+                          b.status === 'CONFIRMED' ? 'bg-green-100 text-green-700' :
+                          b.status === 'PENDING' ? 'bg-yellow-100 text-yellow-700' :
+                          b.status === 'ACTIVE' ? 'bg-blue-100 text-blue-700' :
+                          b.status === 'COMPLETED' ? 'bg-gray-100 text-gray-700' :
+                          b.status === 'CANCELLED' ? 'bg-red-100 text-red-700' : 'bg-gray-100'
+                        }`}>{b.status}</span>
+                      </td>
+                      <td className="px-3 py-2">
+                        <span className={`px-2 py-1 rounded text-xs ${
+                          b.depositStatus === 'CARD_SAVED' ? 'bg-blue-100 text-blue-700' :
+                          b.depositStatus === 'AUTHORIZED' ? 'bg-purple-100 text-purple-700' :
+                          b.depositStatus === 'RELEASED' ? 'bg-green-100 text-green-700' :
+                          b.depositStatus === 'CAPTURED' ? 'bg-orange-100 text-orange-700' :
+                          'bg-gray-100 text-gray-500'
+                        }`}>
+                          {b.depositStatus === 'CARD_SAVED' ? '💳 Carte OK' :
+                           b.depositStatus === 'AUTHORIZED' ? '🔒 Bloquée' :
+                           b.depositStatus === 'RELEASED' ? '✅ Libérée' :
+                           b.depositStatus === 'CAPTURED' ? `💰 ${b.depositCapturedAmount || ''}€` :
+                           '⏳ En attente'}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
         {tab === 'vehicles' && (
           <div>
             <div className="flex justify-between items-center mb-4"><h2 className="text-xl font-bold">Véhicules Voltride</h2><button onClick={() => { setEditItem(null); setShowModal('vehicle') }} className="bg-cyan-600 text-white px-4 py-2 rounded-lg text-sm">+ Ajouter</button></div>
