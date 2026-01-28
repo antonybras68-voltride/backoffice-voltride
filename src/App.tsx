@@ -426,7 +426,7 @@ const allBookings = await bookRes.json()
 
 
         {tab === "documents" && (
-          <div className="max-w-4xl">
+          <div>
             <h2 className="text-xl font-bold mb-4">📄 Documents Légaux</h2>
             <div className="bg-white rounded-xl shadow p-6 space-y-4">
               <div className="flex gap-2 flex-wrap mb-4">
@@ -453,7 +453,7 @@ const allBookings = await bookRes.json()
         )}
 
         {tab === "notifications" && (
-          <div className="max-w-4xl">
+          <div>
             <h2 className="text-xl font-bold mb-4">🔔 Configuration des Notifications</h2>
             <div className="bg-white rounded-xl shadow p-6">
               <p className="text-gray-600 text-sm mb-6">Configurez quelles notifications chaque rôle doit recevoir.</p>
