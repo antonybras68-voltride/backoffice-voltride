@@ -189,7 +189,7 @@ const allBookings = await bookRes.json()
       </div>
 
       <div className="flex-1 p-6 overflow-auto">
-{tab === 'reservations' && (
+        {tab === 'reservations' && (
           <div>
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-bold">Réservations Voltride</h2>
