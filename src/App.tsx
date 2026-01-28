@@ -4,7 +4,7 @@ import { AgencyScheduleModal } from './AgencyScheduleModal'
 const API_URL = 'https://api-voltrideandmotorrent-production.up.railway.app'
 const BRAND = 'VOLTRIDE'
 
-type Tab = 'vehicles' | 'reservations' | 'agencies' | 'categories' | 'options' | 'entreprise' | 'widget' | 'operator' | 'comptabilite'
+type Tab = 'vehicles' | 'reservations' | 'agencies' | 'categories' | 'options' | 'entreprise' | 'widget' | 'operator' | 'comptabilite' | 'documents' | 'notifications'
 
 interface Agency { id: string; code: string; name: any; address: string; city: string; postalCode: string; country: string; phone: string; email: string; brand: string; isActive: boolean; agencyType: string; commissionRate?: number; commissionEmail?: string; showStockUrgency?: boolean }
 interface Category { id: string; code: string; name: any; brand: string; bookingFee: number; bookingFeePercentLow?: number; bookingFeePercentHigh?: number; _count?: { vehicles: number } }
@@ -26,8 +26,11 @@ function App() {
   const [widgetSettings, setWidgetSettings] = useState({ stripeEnabled: false, stripeMode: 'test', stripePublishableKey: '', stripeSecretKey: '', minDays: 1, maxDays: 30 })
   const [operatorSettings, setOperatorSettings] = useState({ emailNotifications: true, notificationEmail: '', smsNotifications: false, smsPhone: '', autoAssign: true, showCustomerPhone: true })
   const [comptaSettings, setComptaSettings] = useState({ tvaRate: 21, currency: 'EUR', invoicePrefix: 'VR-', invoiceNextNumber: 1, paymentTerms: 30, bankName: '', bankIban: '', bankBic: '' })
+  const [legalSettings, setLegalSettings] = useState<any>({ cgvResume: { fr: '', es: '', en: '' }, cgvComplete: { fr: '', es: '', en: '' }, rgpd: { fr: '', es: '', en: '' }, mentionsLegales: { fr: '', es: '', en: '' } })
+  const [legalSection, setLegalSection] = useState('cgvResume')
+  const [notificationSettings, setNotificationSettings] = useState<any>({})
 
-  useEffect(() => { loadAllData(); loadEntreprise(); loadWidgetSettings(); loadOperatorSettings(); loadComptaSettings() }, [])
+  useEffect(() => { loadAllData(); loadEntreprise(); loadWidgetSettings(); loadOperatorSettings(); loadComptaSettings(); loadLegalSettings(); loadNotificationSettings() }, [])
 
   const loadAllData = async () => {
     try {
@@ -112,6 +115,36 @@ const allBookings = await bookRes.json()
     } catch (e) { console.error(e) }
   }
 
+  const loadLegalSettings = async () => {
+    try {
+      const res = await fetch(API_URL + "/api/brand-settings/VOLTRIDE")
+      if (res.ok) { const data = await res.json(); if (data) setLegalSettings(data) }
+    } catch (e) { console.error(e) }
+  }
+
+  const saveLegalSettings = async () => {
+    try {
+      await fetch(API_URL + "/api/brand-settings/VOLTRIDE", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(legalSettings) })
+      alert("Documents légaux sauvegardés !")
+    } catch (e) { alert("Erreur lors de la sauvegarde") }
+  }
+
+  const loadNotificationSettings = async () => {
+    try {
+      const res = await fetch(API_URL + "/api/notification-settings")
+      if (res.ok) { const data = await res.json(); const settings: any = {}; data.forEach((n: any) => { settings[n.notificationType] = n }); setNotificationSettings(settings) }
+    } catch (e) { console.error(e) }
+  }
+
+  const saveNotificationSettings = async () => {
+    try {
+      for (const [type, settings] of Object.entries(notificationSettings)) {
+        await fetch(API_URL + "/api/notification-settings", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ notificationType: type, ...(settings as any) }) })
+      }
+      alert("Paramètres notifications sauvegardés !")
+    } catch (e) { alert("Erreur lors de la sauvegarde") }
+  }
+
   const saveComptaSettings = async () => {
     try {
       await fetch(API_URL + "/api/settings/compta-voltride", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(comptaSettings) })
@@ -148,7 +181,7 @@ const allBookings = await bookRes.json()
             <button key={item.id} onClick={() => setTab(item.id as Tab)} className={'w-full text-left px-3 py-2 rounded-lg flex items-center gap-2 transition text-sm ' + (tab === item.id ? 'bg-white/20 font-bold' : 'hover:bg-white/10')}><span>{item.icon}</span>{item.label}</button>
           ))}
           <p className="text-xs uppercase text-white/50 px-3 pt-4">Paramètres</p>
-          {[{ id: 'entreprise', label: 'Entreprise', icon: '🏛️' }, { id: 'widget', label: 'Widget', icon: '🎨' }, { id: 'operator', label: 'Operator', icon: '👤' }, { id: 'comptabilite', label: 'Comptabilité', icon: '💰' }].map(item => (
+          {[{ id: 'entreprise', label: 'Entreprise', icon: '🏛️' }, { id: 'documents', label: 'Documents légaux', icon: '📄' }, { id: 'notifications', label: 'Notifications', icon: '🔔' }, { id: 'widget', label: 'Widget', icon: '🎨' }, { id: 'operator', label: 'Operator', icon: '👤' }, { id: 'comptabilite', label: 'Comptabilité', icon: '💰' }].map(item => (
             <button key={item.id} onClick={() => setTab(item.id as Tab)} className={'w-full text-left px-3 py-2 rounded-lg flex items-center gap-2 transition text-sm ' + (tab === item.id ? 'bg-white/20 font-bold' : 'hover:bg-white/10')}><span>{item.icon}</span>{item.label}</button>
           ))}
         </nav>
@@ -390,6 +423,74 @@ const allBookings = await bookRes.json()
           </div>
         )}
       </div>
+
+
+        {tab === "documents" && (
+          <div className="max-w-4xl">
+            <h2 className="text-xl font-bold mb-4">📄 Documents Légaux</h2>
+            <div className="bg-white rounded-xl shadow p-6 space-y-4">
+              <div className="flex gap-2 flex-wrap mb-4">
+                {[
+                  { id: 'cgvResume', label: '📄 CGV Résumé' },
+                  { id: 'cgvComplete', label: '📋 CGV Complètes' },
+                  { id: 'rgpd', label: '🔒 RGPD' },
+                  { id: 'mentionsLegales', label: '⚖️ Mentions Légales' }
+                ].map(s => (
+                  <button key={s.id} onClick={() => setLegalSection(s.id)} className={'px-3 py-2 rounded-lg text-sm ' + (legalSection === s.id ? 'bg-cyan-600 text-white' : 'bg-gray-100 hover:bg-gray-200')}>{s.label}</button>
+                ))}
+              </div>
+              <div className="space-y-4">
+                {['fr', 'es', 'en'].map(lang => (
+                  <div key={lang}>
+                    <label className="block text-sm font-medium mb-1">{lang === 'fr' ? '🇫🇷 Français' : lang === 'es' ? '🇪🇸 Español' : '🇬🇧 English'}</label>
+                    <textarea value={legalSettings[legalSection]?.[lang] || ''} onChange={e => setLegalSettings({...legalSettings, [legalSection]: {...legalSettings[legalSection], [lang]: e.target.value}})} className="w-full border rounded-lg p-3 h-40 font-mono text-sm" placeholder={`Entrez le texte en ${lang === 'fr' ? 'français' : lang === 'es' ? 'espagnol' : 'anglais'}...`} />
+                  </div>
+                ))}
+              </div>
+              <button onClick={saveLegalSettings} className="bg-cyan-600 text-white px-6 py-2 rounded-lg hover:bg-cyan-700">💾 Sauvegarder</button>
+            </div>
+          </div>
+        )}
+
+        {tab === "notifications" && (
+          <div className="max-w-4xl">
+            <h2 className="text-xl font-bold mb-4">🔔 Configuration des Notifications</h2>
+            <div className="bg-white rounded-xl shadow p-6">
+              <p className="text-gray-600 text-sm mb-6">Configurez quelles notifications chaque rôle doit recevoir.</p>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b bg-gray-50">
+                      <th className="text-left py-3 px-4">Notification</th>
+                      <th className="text-center py-3 px-4">Admin</th>
+                      <th className="text-center py-3 px-4">Manager</th>
+                      <th className="text-center py-3 px-4">Opérateur</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {[
+                      { id: 'new_booking', label: '🚲 Nouvelle réservation' },
+                      { id: 'booking_cancelled', label: '❌ Réservation annulée' },
+                      { id: 'checkin_imminent', label: '⏰ Check-in imminent' },
+                      { id: 'checkout_imminent', label: '⏰ Check-out imminent' },
+                      { id: 'late_return', label: '⚠️ Retard de retour' },
+                      { id: 'payment_received', label: '💰 Paiement reçu' },
+                      { id: 'maintenance_due', label: '🔧 Maintenance à planifier' },
+                    ].map(notif => (
+                      <tr key={notif.id} className="border-b hover:bg-gray-50">
+                        <td className="py-3 px-4 font-medium">{notif.label}</td>
+                        <td className="text-center py-3 px-4"><input type="checkbox" checked={notificationSettings[notif.id]?.roleAdmin ?? true} onChange={e => setNotificationSettings({...notificationSettings, [notif.id]: {...notificationSettings[notif.id], roleAdmin: e.target.checked}})} className="w-5 h-5 rounded" /></td>
+                        <td className="text-center py-3 px-4"><input type="checkbox" checked={notificationSettings[notif.id]?.roleManager ?? true} onChange={e => setNotificationSettings({...notificationSettings, [notif.id]: {...notificationSettings[notif.id], roleManager: e.target.checked}})} className="w-5 h-5 rounded" /></td>
+                        <td className="text-center py-3 px-4"><input type="checkbox" checked={notificationSettings[notif.id]?.roleOperator ?? false} onChange={e => setNotificationSettings({...notificationSettings, [notif.id]: {...notificationSettings[notif.id], roleOperator: e.target.checked}})} className="w-5 h-5 rounded" /></td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <div className="mt-6"><button onClick={saveNotificationSettings} className="bg-cyan-600 text-white px-6 py-2 rounded-lg hover:bg-cyan-700">💾 Sauvegarder</button></div>
+            </div>
+          </div>
+        )}
 
       {showModal === 'vehicle' && <VehicleModal vehicle={editItem} categories={categories} onSave={(data) => handleSave('vehicles', data)} onClose={() => { setShowModal(null); setEditItem(null) }} />}
       {showModal === 'category' && <CategoryModal category={editItem} onSave={(data) => handleSave('categories', data)} onClose={() => { setShowModal(null); setEditItem(null) }} />}
