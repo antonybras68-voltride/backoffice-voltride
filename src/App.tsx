@@ -26,7 +26,7 @@ function App() {
   const [widgetSettings, setWidgetSettings] = useState({ stripeEnabled: false, stripeMode: 'test', stripePublishableKey: '', stripeSecretKey: '', minDays: 1, maxDays: 30 })
   const [operatorSettings, setOperatorSettings] = useState({ emailNotifications: true, notificationEmail: '', smsNotifications: false, smsPhone: '', autoAssign: true, showCustomerPhone: true })
   const [comptaSettings, setComptaSettings] = useState({ tvaRate: 21, currency: 'EUR', invoicePrefix: 'VR-', invoiceNextNumber: 1, paymentTerms: 30, bankName: '', bankIban: '', bankBic: '' })
-  const [legalSettings, setLegalSettings] = useState<any>({ cgvResume: { fr: '', es: '', en: '' }, cgvComplete: { fr: '', es: '', en: '' }, rgpd: { fr: '', es: '', en: '' }, mentionsLegales: { fr: '', es: '', en: '' } })
+  const [legalSettings, setLegalSettings] = useState<any>({ cgvPdf: { fr: '', es: '', en: '' }, rgpdPdf: { fr: '', es: '', en: '' } })
   const [legalSection, setLegalSection] = useState('cgvResume')
   const [notificationSettings, setNotificationSettings] = useState<any>({})
 
@@ -428,26 +428,76 @@ const allBookings = await bookRes.json()
         {tab === "documents" && (
           <div>
             <h2 className="text-xl font-bold mb-4">📄 Documents Légaux</h2>
-            <div className="bg-white rounded-xl shadow p-6 space-y-4">
-              <div className="flex gap-2 flex-wrap mb-4">
-                {[
-                  { id: 'cgvResume', label: '📄 CGV Résumé' },
-                  { id: 'cgvComplete', label: '📋 CGV Complètes' },
-                  { id: 'rgpd', label: '🔒 RGPD' },
-                  { id: 'mentionsLegales', label: '⚖️ Mentions Légales' }
-                ].map(s => (
-                  <button key={s.id} onClick={() => setLegalSection(s.id)} className={'px-3 py-2 rounded-lg text-sm ' + (legalSection === s.id ? 'bg-cyan-600 text-white' : 'bg-gray-100 hover:bg-gray-200')}>{s.label}</button>
-                ))}
+            <div className="bg-white rounded-xl shadow p-6 space-y-6">
+              <p className="text-gray-600 text-sm">Uploadez vos documents légaux en PDF pour chaque langue. Ces documents seront affichés lors du check-in client.</p>
+              
+              {/* CGV - Conditions Générales de Vente */}
+              <div className="border rounded-xl p-4">
+                <h3 className="font-bold text-lg mb-4">📋 Conditions Générales de Vente (CGV)</h3>
+                <div className="grid grid-cols-3 gap-4">
+                  {[
+                    { lang: 'fr', flag: '🇫🇷', label: 'Français' },
+                    { lang: 'es', flag: '🇪🇸', label: 'Español' },
+                    { lang: 'en', flag: '🇬🇧', label: 'English' }
+                  ].map(({ lang, flag, label }) => (
+                    <div key={lang} className="border rounded-lg p-3">
+                      <p className="font-medium mb-2">{flag} {label}</p>
+                      {legalSettings.cgvPdf?.[lang] ? (
+                        <div className="space-y-2">
+                          <a href={legalSettings.cgvPdf[lang]} target="_blank" rel="noreferrer" className="text-cyan-600 hover:underline text-sm block truncate">📄 Voir le PDF</a>
+                          <button onClick={() => setLegalSettings({...legalSettings, cgvPdf: {...legalSettings.cgvPdf, [lang]: ''}})} className="text-red-500 text-xs hover:underline">❌ Supprimer</button>
+                        </div>
+                      ) : (
+                        <input type="file" accept=".pdf" onChange={async (e) => {
+                          const file = e.target.files?.[0]
+                          if (!file) return
+                          const fd = new FormData()
+                          fd.append('file', file)
+                          fd.append('upload_preset', 'voltride')
+                          const res = await fetch('https://api.cloudinary.com/v1_1/dis5pcnfr/raw/upload', { method: 'POST', body: fd })
+                          const data = await res.json()
+                          setLegalSettings({...legalSettings, cgvPdf: {...legalSettings.cgvPdf, [lang]: data.secure_url}})
+                        }} className="text-sm w-full" />
+                      )}
+                    </div>
+                  ))}
+                </div>
               </div>
-              <div className="space-y-4">
-                {['fr', 'es', 'en'].map(lang => (
-                  <div key={lang}>
-                    <label className="block text-sm font-medium mb-1">{lang === 'fr' ? '🇫🇷 Français' : lang === 'es' ? '🇪🇸 Español' : '🇬🇧 English'}</label>
-                    <textarea value={legalSettings[legalSection]?.[lang] || ''} onChange={e => setLegalSettings({...legalSettings, [legalSection]: {...legalSettings[legalSection], [lang]: e.target.value}})} className="w-full border rounded-lg p-3 h-40 font-mono text-sm" placeholder={`Entrez le texte en ${lang === 'fr' ? 'français' : lang === 'es' ? 'espagnol' : 'anglais'}...`} />
-                  </div>
-                ))}
+              
+              {/* RGPD */}
+              <div className="border rounded-xl p-4">
+                <h3 className="font-bold text-lg mb-4">🔒 Politique RGPD</h3>
+                <div className="grid grid-cols-3 gap-4">
+                  {[
+                    { lang: 'fr', flag: '🇫🇷', label: 'Français' },
+                    { lang: 'es', flag: '🇪🇸', label: 'Español' },
+                    { lang: 'en', flag: '🇬🇧', label: 'English' }
+                  ].map(({ lang, flag, label }) => (
+                    <div key={lang} className="border rounded-lg p-3">
+                      <p className="font-medium mb-2">{flag} {label}</p>
+                      {legalSettings.rgpdPdf?.[lang] ? (
+                        <div className="space-y-2">
+                          <a href={legalSettings.rgpdPdf[lang]} target="_blank" rel="noreferrer" className="text-cyan-600 hover:underline text-sm block truncate">📄 Voir le PDF</a>
+                          <button onClick={() => setLegalSettings({...legalSettings, rgpdPdf: {...legalSettings.rgpdPdf, [lang]: ''}})} className="text-red-500 text-xs hover:underline">❌ Supprimer</button>
+                        </div>
+                      ) : (
+                        <input type="file" accept=".pdf" onChange={async (e) => {
+                          const file = e.target.files?.[0]
+                          if (!file) return
+                          const fd = new FormData()
+                          fd.append('file', file)
+                          fd.append('upload_preset', 'voltride')
+                          const res = await fetch('https://api.cloudinary.com/v1_1/dis5pcnfr/raw/upload', { method: 'POST', body: fd })
+                          const data = await res.json()
+                          setLegalSettings({...legalSettings, rgpdPdf: {...legalSettings.rgpdPdf, [lang]: data.secure_url}})
+                        }} className="text-sm w-full" />
+                      )}
+                    </div>
+                  ))}
+                </div>
               </div>
-              <button onClick={saveLegalSettings} className="bg-cyan-600 text-white px-6 py-2 rounded-lg hover:bg-cyan-700">💾 Sauvegarder</button>
+              
+              <button onClick={saveLegalSettings} className="bg-cyan-600 text-white px-6 py-2 rounded-lg hover:bg-cyan-700">💾 Sauvegarder les documents</button>
             </div>
           </div>
         )}
