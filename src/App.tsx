@@ -26,7 +26,7 @@ function App() {
   const [widgetSettings, setWidgetSettings] = useState({ stripeEnabled: false, stripeMode: 'test', stripePublishableKey: '', stripeSecretKey: '', minDays: 1, maxDays: 30 })
   const [operatorSettings, setOperatorSettings] = useState({ emailNotifications: true, notificationEmail: '', smsNotifications: false, smsPhone: '', autoAssign: true, showCustomerPhone: true })
   const [comptaSettings, setComptaSettings] = useState({ tvaRate: 21, currency: 'EUR', invoicePrefix: 'VR-', invoiceNextNumber: 1, paymentTerms: 30, bankName: '', bankIban: '', bankBic: '' })
-  const [legalSettings, setLegalSettings] = useState<any>({ cgvPdf: { fr: '', es: '', en: '' }, rgpdPdf: { fr: '', es: '', en: '' } })
+  const [legalSettings, setLegalSettings] = useState<any>({ cgvResume: { fr: '', es: '', en: '' }, rgpd: { fr: '', es: '', en: '' } })
   const [legalSection, setLegalSection] = useState('cgvResume')
   const [notificationSettings, setNotificationSettings] = useState<any>({})
 
@@ -442,10 +442,10 @@ const allBookings = await bookRes.json()
                   ].map(({ lang, flag, label }) => (
                     <div key={lang} className="border rounded-lg p-3">
                       <p className="font-medium mb-2">{flag} {label}</p>
-                      {legalSettings.cgvPdf?.[lang] ? (
+                      {legalSettings.cgvResume?.[lang] ? (
                         <div className="space-y-2">
-                          <a href={legalSettings.cgvPdf[lang]} target="_blank" rel="noreferrer" className="text-cyan-600 hover:underline text-sm block truncate">📄 Voir le PDF</a>
-                          <button onClick={() => setLegalSettings({...legalSettings, cgvPdf: {...legalSettings.cgvPdf, [lang]: ''}})} className="text-red-500 text-xs hover:underline">❌ Supprimer</button>
+                          <a href={legalSettings.cgvResume[lang]} target="_blank" rel="noreferrer" className="text-cyan-600 hover:underline text-sm block truncate">📄 Voir le PDF</a>
+                          <button onClick={() => setLegalSettings({...legalSettings, cgvResume: {...legalSettings.cgvResume, [lang]: ''}})} className="text-red-500 text-xs hover:underline">❌ Supprimer</button>
                         </div>
                       ) : (
                         <input type="file" accept=".pdf" onChange={async (e) => {
@@ -456,7 +456,7 @@ const allBookings = await bookRes.json()
                           fd.append('upload_preset', 'voltride')
                           const res = await fetch('https://api.cloudinary.com/v1_1/dis5pcnfr/raw/upload', { method: 'POST', body: fd })
                           const data = await res.json()
-                          setLegalSettings({...legalSettings, cgvPdf: {...legalSettings.cgvPdf, [lang]: data.secure_url}})
+                          setLegalSettings({...legalSettings, cgvResume: {...legalSettings.cgvResume, [lang]: data.secure_url}})
                         }} className="text-sm w-full" />
                       )}
                     </div>
@@ -475,10 +475,10 @@ const allBookings = await bookRes.json()
                   ].map(({ lang, flag, label }) => (
                     <div key={lang} className="border rounded-lg p-3">
                       <p className="font-medium mb-2">{flag} {label}</p>
-                      {legalSettings.rgpdPdf?.[lang] ? (
+                      {legalSettings.rgpd?.[lang] ? (
                         <div className="space-y-2">
-                          <a href={legalSettings.rgpdPdf[lang]} target="_blank" rel="noreferrer" className="text-cyan-600 hover:underline text-sm block truncate">📄 Voir le PDF</a>
-                          <button onClick={() => setLegalSettings({...legalSettings, rgpdPdf: {...legalSettings.rgpdPdf, [lang]: ''}})} className="text-red-500 text-xs hover:underline">❌ Supprimer</button>
+                          <a href={legalSettings.rgpd[lang]} target="_blank" rel="noreferrer" className="text-cyan-600 hover:underline text-sm block truncate">📄 Voir le PDF</a>
+                          <button onClick={() => setLegalSettings({...legalSettings, rgpd: {...legalSettings.rgpd, [lang]: ''}})} className="text-red-500 text-xs hover:underline">❌ Supprimer</button>
                         </div>
                       ) : (
                         <input type="file" accept=".pdf" onChange={async (e) => {
@@ -489,7 +489,7 @@ const allBookings = await bookRes.json()
                           fd.append('upload_preset', 'voltride')
                           const res = await fetch('https://api.cloudinary.com/v1_1/dis5pcnfr/raw/upload', { method: 'POST', body: fd })
                           const data = await res.json()
-                          setLegalSettings({...legalSettings, rgpdPdf: {...legalSettings.rgpdPdf, [lang]: data.secure_url}})
+                          setLegalSettings({...legalSettings, rgpd: {...legalSettings.rgpd, [lang]: data.secure_url}})
                         }} className="text-sm w-full" />
                       )}
                     </div>
