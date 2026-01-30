@@ -434,7 +434,7 @@ const allBookings = await bookRes.json()
               {/* CGV - Conditions Générales de Vente */}
               <div className="border rounded-xl p-4">
                 <h3 className="font-bold text-lg mb-4">📋 Conditions Générales de Vente (CGV)</h3>
-                <div className="grid grid-cols-3 gap-4">
+                <div className="space-y-4">
                   {[
                     { lang: 'fr', flag: '🇫🇷', label: 'Français' },
                     { lang: 'es', flag: '🇪🇸', label: 'Español' },
@@ -442,23 +442,12 @@ const allBookings = await bookRes.json()
                   ].map(({ lang, flag, label }) => (
                     <div key={lang} className="border rounded-lg p-3">
                       <p className="font-medium mb-2">{flag} {label}</p>
-                      {legalSettings.cgvResume?.[lang] ? (
-                        <div className="space-y-2">
-                          <a href={legalSettings.cgvResume[lang]} target="_blank" rel="noreferrer" className="text-cyan-600 hover:underline text-sm block truncate">📄 Voir le PDF</a>
-                          <button onClick={() => setLegalSettings({...legalSettings, cgvResume: {...legalSettings.cgvResume, [lang]: ''}})} className="text-red-500 text-xs hover:underline">❌ Supprimer</button>
-                        </div>
-                      ) : (
-                        <input type="file" accept=".pdf" onChange={async (e) => {
-                          const file = e.target.files?.[0]
-                          if (!file) return
-                          const fd = new FormData()
-                          fd.append('file', file)
-                          fd.append('upload_preset', 'voltride')
-                          const res = await fetch('https://api.cloudinary.com/v1_1/dis5pcnfr/image/upload', { method: 'POST', body: fd })
-                          const data = await res.json()
-                          setLegalSettings({...legalSettings, cgvResume: {...legalSettings.cgvResume, [lang]: data.secure_url}})
-                        }} className="text-sm w-full" />
-                      )}
+                      <textarea
+                        value={legalSettings.cgvResume?.[lang] || ''}
+                        onChange={(e) => setLegalSettings({...legalSettings, cgvResume: {...legalSettings.cgvResume, [lang]: e.target.value}})}
+                        placeholder={`Saisissez les CGV en ${label}...`}
+                        className="w-full h-40 p-2 border rounded-lg text-sm resize-y"
+                      />
                     </div>
                   ))}
                 </div>
